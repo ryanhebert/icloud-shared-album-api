@@ -16,6 +16,7 @@ A FastAPI-based API to programmatically fetch and serve content from an iCloud S
 - **FastAPI**: High-performance, easy-to-use Python API framework.
 - **Playwright**: Headless browser automation to handle dynamic content.
 - **Uvicorn**: ASGI server to serve the API.
+- **python-dotenv**: Securely manages environment variables.
 
 ## Installation
 
@@ -44,6 +45,12 @@ Install Playwright browser (Chromium):
 playwright install chromium
 ```
 
+Create a `.env` file to securely store environment variables:
+
+```sh
+echo 'ALBUM_URL="your_icloud_album_url_here"' > .env
+```
+
 ## Usage
 
 Run the API locally using Uvicorn:
@@ -69,6 +76,14 @@ http://127.0.0.1:8000
 - **Get a random post:**  
 `GET /random`
 
+## Environment Variables
+
+The API requires an environment variable to function properly. Create a `.env` file in the root of your project containing:
+
+```env
+ALBUM_URL="https://your-icloud-shared-album-url"
+```
+
 ## Example Requests
 
 Fetch recent posts:
@@ -93,4 +108,3 @@ Contributions and pull requests are welcome. For major changes, please open an i
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
