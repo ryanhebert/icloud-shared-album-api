@@ -78,11 +78,34 @@ http://127.0.0.1:8000
 
 ## Environment Variables
 
-The API requires an environment variable to function properly. Create a `.env` file in the root of your project containing:
+Create a `.env` file to securely store environment variables:
 
-```env
-ALBUM_URL="https://your-icloud-shared-album-url"
+```sh
+ALBUM_URL="your_icloud_album_url_here"
 ```
+
+## API Response Structure
+
+The API returns JSON objects with the following structure:
+
+- `timestamp`: ISO formatted timestamp when the response was generated.
+- `total_posts`: Total number of cached posts.
+- `stream_name`: Name of the shared album stream.
+- `album_owner`: Information about the album owner (first and last name).
+- `posts`: Array of posts, each containing:
+  - `post_date`: ISO formatted date of the post.
+  - `caption`: Caption of the post (if available).
+  - `num_photos`: Number of photos in the post.
+  - `images`: List of image objects, each containing:
+    - `url`: Direct URL to the image.
+    - `checksum`: Unique identifier for the image.
+    - `width`: Width of the image in pixels.
+    - `height`: Height of the image.
+    - `file_size`: Size of the image file.
+    - `created_date`: ISO formatted creation date of the image.
+    - `photo_id`: Unique identifier of the photo.
+    - `url_expiry`: URL expiry timestamp.
+    - `expires_in_minutes`: Minutes until the URL expires.
 
 ## Example Requests
 
