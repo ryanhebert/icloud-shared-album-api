@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException
 import asyncio
 from playwright.async_api import async_playwright
@@ -5,9 +6,12 @@ import json
 from datetime import datetime, timezone
 import random
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
-ALBUM_URL = ''
+ALBUM_URL = os.getenv('ALBUM_URL')
 
 class ICloudSharedAlbumAPI:
     def __init__(self, album_url):
@@ -25,13 +29,10 @@ class ICloudSharedAlbumAPI:
                     try:
                         logging.info(f"Received response from {response.url}")
                         json_data = await response.json()
-                        
-                        # Ensure JSON is logged to console and file
+
                         json_string = json.dumps(json_data, indent=2)
                         print(f"JSON Response from Apple:\n{json_string}")
                         logging.info(f"JSON Response from Apple:\n{json_string}")
-                        
-                        logging.info(f"JSON keys received: {list(json_data.keys())}")
 
                         if "items" in json_data and json_data["items"]:
                             json_data["photos"] = self.pending_photos + json_data.get("photos", [])
@@ -50,17 +51,17 @@ class ICloudSharedAlbumAPI:
 
             if self.pending_photos:
                 self._process_album_data({"photos": self.pending_photos, "items": {}})
-            
+
             await browser.close()
 
     def _process_album_data(self, json_data):
         if "photos" not in json_data or not isinstance(json_data["photos"], list):
             return
-        
+
         photos = json_data["photos"]
         images_info = json_data.get("items", {})
         posts = {}
-        
+
         for photo in photos:
             batch_guid = photo.get("batchGuid", "unknown")
             caption = photo.get("caption", "No Caption").strip()
@@ -81,13 +82,12 @@ class ICloudSharedAlbumAPI:
                         url_location = image_data.get("url_location")
                         url_path = image_data.get("url_path")
                         url_expiry = image_data.get("url_expiry")
-                        
-                        # Calculate expiration in minutes
+
                         expiry_minutes = None
                         if url_expiry:
                             expiry_datetime = datetime.strptime(url_expiry, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                             expiry_minutes = max(0, int((expiry_datetime - datetime.now(timezone.utc)).total_seconds() / 60))
-                        
+
                         if url_location and url_path:
                             image_objects.append({
                                 "url": f"https://{url_location}{url_path}",
@@ -114,13 +114,6 @@ class ICloudSharedAlbumAPI:
                 if not posts[batch_guid]["caption"] and caption:
                     posts[batch_guid]["caption"] = caption
 
-        for batch_guid, post in posts.items():
-            post["contributor_name"] = next((f"{p.get('contributorFirstName', '')} {p.get('contributorLastName', '')}".strip() for p in photos if p.get('batchGuid') == batch_guid and p.get('contributorFirstName')), None)
-            
-            post["total_file_size"] = sum(int(img["file_size"]) for img in post["images"] if img["file_size"]) if post["images"] else None
-            post["resolution"] = f"{max((int(img['width']) for img in post['images'] if img.get('width')), default=0)}x{max((int(img['height']) for img in post['images'] if img.get('height')), default=0)}"
-            post["url_expiry"] = min((img["url_expiry"] for img in post["images"] if img["url_expiry"]), default=None)
-        
         self.album_data = list(posts.values())
 
     async def get_album_data(self):
@@ -158,7 +151,7 @@ async def posts_by_date(post_date: str):
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
     matched_posts = [post for post in app.state.posts_cache if post["post_date"] and datetime.fromisoformat(post["post_date"]).date() == query_date]
-    
+
     if not matched_posts:
         raise HTTPException(status_code=404, detail="No posts found for the specified date")
 
